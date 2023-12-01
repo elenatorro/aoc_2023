@@ -1,0 +1,5 @@
+SCHEMA >
+    `calibration` String
+
+ENGINE "MergeTree"
+ENGINE_SORTING_KEY "calibration"
