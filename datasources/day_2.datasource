@@ -1,0 +1,4 @@
+SCHEMA >
+    `games` String
+
+ENGINE "MergeTree"
