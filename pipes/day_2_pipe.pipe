@@ -1,0 +1,3 @@
+NODE day_2_star_1
+SQL >
+    SELECT * FROM day_2
