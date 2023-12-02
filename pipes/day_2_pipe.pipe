@@ -1,3 +1,62 @@
+NODE common
+SQL >
+
+    SELECT
+        game_number,
+        arrayMap(
+            x -> arrayMap(y -> splitByChar(',', trim(y)), x), bag_groups
+        ) bag_groups_groups
+    FROM
+        (
+            SELECT
+                game_number,
+                arrayMap(x -> splitByChar(',', trim(x)), bags) as bag_groups,
+                length(bag_groups) as groups
+            FROM
+                (
+                    SELECT game_number, splitByChar(';', bags) as bags
+                    FROM
+                        (
+                            SELECT
+                                toInt8(splitByChar(' ', game[1])[2]) as game_number,
+                                trim(game[2]) as bags
+                            FROM (SELECT splitByChar(':', game) as game FROM day_2)
+                            ORDER BY game_number
+                        )
+                )
+        )
+
+
+
 NODE day_2_star_1
 SQL >
-    SELECT * FROM day_2
+
+    SELECT
+      sumIf(game_number, is_valid != 0) as result
+    FROM (
+      WITH (map('red', 12, 'green', 13, 'blue', 14)) as values
+      SELECT
+          values,
+          game_number,
+          arraySum(x -> arraySum(y -> arraySum(z -> if(toInt8(splitByChar(' ', z)[1]) <= values[splitByChar(' ', z)[2]], 0, 1) , y) ,x),bag_groups_groups) as total_valid,
+          if(total_valid > 0, 0, 1) as is_valid
+      FROM common
+    )
+
+
+
+NODE day_2_star_2
+SQL >
+
+    SELECT sum(power) as result
+    FROM (
+      WITH (map('red', 12, 'green', 13, 'blue', 14)) as values
+      SELECT
+          values,
+          game_number,
+          arrayMax(x -> arraySum(y -> arrayMax(z -> if(splitByChar(' ', z)[2] == 'red', toInt16(splitByChar(' ', z)[1]), 0),y),x), bag_groups_groups) as reds,
+          arrayMax(x -> arraySum(y -> arrayMax(z -> if(splitByChar(' ', z)[2] == 'blue', toInt16(splitByChar(' ', z)[1]), 0),y),x),bag_groups_groups) as blues,
+          arrayMax(x -> arraySum(y -> arrayMax(z -> if(splitByChar(' ', z)[2] == 'green', toInt16(splitByChar(' ', z)[1]), 0),y),x),bag_groups_groups) as greens,
+          reds * blues * greens as power
+      FROM common
+     )
