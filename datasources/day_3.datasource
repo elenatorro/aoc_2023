@@ -1,0 +1,4 @@
+SCHEMA >
+    `line` String
+
+ENGINE "MergeTree"
