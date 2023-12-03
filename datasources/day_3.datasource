@@ -1,4 +1,6 @@
 SCHEMA >
+    `line_no`, Int8,
     `line` String
 
 ENGINE "MergeTree"
+ENGINE_SORTING_KEY "line_no"
