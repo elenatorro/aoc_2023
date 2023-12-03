@@ -1,5 +1,5 @@
 SCHEMA >
-    `line_no`, Int8,
+    `line_no` Int8,
     `line` String
 
 ENGINE "MergeTree"
