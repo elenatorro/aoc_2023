@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 
-tb push day_2 --force --fixtures --dialect_delimiter=''
+tb push day_2 --force --fixtures
 tb deploy --fixtures --wait --yes
