@@ -93,8 +93,70 @@ SQL >
 
 
 
-NODE totals
+NODE day_3_star_1
 SQL >
 
     SELECT sum(line_number) as total FROM remove_duplicates
+
+
+
+NODE get_star_line_numbers
+SQL >
+
+    WITH (SELECT groupArray(splitByString('', line)) as lines FROM (SELECT * FROM day_3 ORDER BY line_no)) as map_lines
+    SELECT
+      length(map_lines[line_no]) as line_length,
+      length(map_lines) as lines_length,
+      line_no,
+      toInt64(line_number) as line_number,
+      init_position,
+      positions,
+      pos,
+      multiIf(
+        --> -1, -1
+        line_no > 1 and pos > 1 and match(map_lines[line_no - 1][pos - 1], '(\*)'), cityHash64(trim(toString((line_no - 1, pos - 1)))),
+        --> -1, 0
+        line_no > 1 and match(map_lines[line_no - 1][pos], '(\*)'), cityHash64(trim(toString((line_no - 1, pos)))),
+        --> -1, +1
+        line_no > 1 and pos < line_length and match(map_lines[line_no - 1][pos + 1], '(\*)'), cityHash64(trim(toString((line_no - 1, pos + 1)))),
+        --> 0, -1
+        pos > 1 and match(map_lines[line_no][pos - 1], '(\*)'), cityHash64(trim(toString((line_no, pos - 1)))),
+        --> 0, +1
+        pos < line_length and match(map_lines[line_no][pos + 1], '(\*)'), cityHash64(trim(toString((line_no, pos + 1)))),
+        --> +1, -1
+        line_no < lines_length and pos > 1 and match(map_lines[line_no + 1][pos - 1], '(\*)'), cityHash64(trim(toString((line_no + 1, pos - 1)))),
+        --> +1, 0
+        line_no < lines_length and match(map_lines[line_no + 1][pos], '(\*)'), cityHash64(trim(toString((line_no + 1, pos)))),
+        --> +1, +1
+        line_no < lines_length and pos < line_length and match(map_lines[line_no + 1][pos + 1], '(\*)'), cityHash64(trim(toString((line_no + 1, pos + 1)))),
+        0
+      ) as symbol_position
+    FROM get_number_positions
+
+
+
+
+NODE filter_line_numbers
+SQL >
+
+    SELECT distinct line_number as group_numbers, symbol_position, positions, line_no FROM get_star_line_numbers
+    WHERE symbol_position > 0
+    ORDER BY symbol_position
+
+
+
+NODE group_line_numbers
+SQL >
+
+    SELECT groupArray(group_numbers) as group_numbers, symbol_position
+    FROM filter_line_numbers
+    GROUP BY symbol_position
+    HAVING LENGTH(group_numbers) > 1
+
+
+
+NODE day_3_star_2
+SQL >
+
+    SELECT sum(group_numbers[1] * group_numbers[2]) as total FROM group_line_numbers
 
