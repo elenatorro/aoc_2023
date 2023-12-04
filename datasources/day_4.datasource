@@ -1,0 +1,4 @@
+SCHEMA >
+    `card` String
+
+ENGINE "MergeTree"
