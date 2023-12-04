@@ -20,7 +20,7 @@ SQL >
                             SELECT
                                 toInt8(splitByChar(' ', game[1])[2]) as game_number,
                                 trim(game[2]) as bags
-                            FROM (SELECT splitByChar(':', game) as game FROM day_2)
+                            FROM (SELECT splitByChar(':', games) as game FROM day_2)
                             ORDER BY game_number
                         )
                 )
