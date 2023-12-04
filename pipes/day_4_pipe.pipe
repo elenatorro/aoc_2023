@@ -1,0 +1,3 @@
+NODE first_node
+SQL >
+    SELECT * FROM day_4
