@@ -1,4 +1,5 @@
 SCHEMA >
-    `card` String
+    `card` String,
+    `winning_numbers` String
 
 ENGINE "MergeTree"
