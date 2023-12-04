@@ -1,4 +1,97 @@
-NODE day_3_star_1
+NODE get_number_positions
 SQL >
 
-    SELECT 1
+    SELECT
+        line_no,
+        line_number,
+        init_position,
+        init_neightbors,
+        arrayJoin(
+            range(init_position, toUInt64(init_position + length(line_number)))
+        ) as pos
+    FROM
+        (
+            SELECT line_no, line_numbers as line_number, init_position, init_neightbors
+            FROM
+                (
+                    SELECT
+                        line_no,
+                        extractAll(line, '(\d+)') as line_numbers,
+                        arrayMap(
+                            i -> position(
+                                line,
+                                line_numbers[i]
+                            ),
+                            range(1, length(line_numbers) + 1)
+                        ) as init_neightbors,
+                        arrayMap(
+                            i -> position(
+                                line,
+                                line_numbers[i]
+                        --        arrayReduce('max', neighbor(init_neightbors, - 1))
+                            ),
+                            range(1, length(line_numbers) + 1)
+                        ) as init_position
+                    FROM day_3
+                    ORDER BY line_no
+                )
+                ARRAY JOIN line_numbers, init_position
+        )
+        where line_no = 78
+
+
+
+NODE get_values_that_have_symbols
+SQL >
+
+    WITH (SELECT groupArray(splitByString('', line)) as lines FROM (SELECT * FROM day_3 ORDER BY line_no)) as map_lines
+    SELECT
+      length(map_lines[line_no]) as line_length,
+      length(map_lines) as lines_length,
+      line_no,
+      toInt64(line_number) as line_number,
+      init_position,
+      pos,
+      multiIf(
+        --> -1, -1
+        line_no > 1 and pos > 1 and match(map_lines[line_no - 1][pos - 1], '[^\d.]'), 1,
+        --> -1, 0
+        line_no > 1 and match(map_lines[line_no - 1][pos], '[^\d.]'), 1,
+        --> -1, +1
+        line_no > 1 and pos < line_length and match(map_lines[line_no - 1][pos + 1], '[^\d.]'), 1,
+        --> 0, -1
+        pos > 1 and match(map_lines[line_no][pos - 1], '[^\d.]'), 1,
+        --> 0, +1
+        pos < line_length and match(map_lines[line_no][pos + 1], '[^\d.]'), 1,
+        --> +1, -1
+        line_no < lines_length and pos > 1 and match(map_lines[line_no + 1][pos - 1], '[^\d.]'), 1,
+        --> +1, 0
+        line_no < lines_length and match(map_lines[line_no + 1][pos], '[^\d.]'), 1,
+        --> +1, +1
+        line_no < lines_length and pos < line_length and match(map_lines[line_no + 1][pos + 1], '[^\d.]'), 1,
+        0
+      ) as has_symbol
+    FROM get_number_positions
+
+
+
+NODE remove_duplicates
+SQL >
+
+    SELECT DISTINCT line_no, line_number, init_position
+    FROM get_values_that_have_symbols
+    WHERE has_symbol > 0
+    ORDER BY line_no, init_position
+
+
+NODE result
+SQL >
+
+    SELECT sum(line_number) as total FROM remove_duplicates
+
+
+
+NODE check_by_line_no
+SQL >
+
+    SELECT line_no, sum(line_number) as total FROM remove_duplicates group by line_no
