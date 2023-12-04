@@ -5,13 +5,13 @@ SQL >
         line_no,
         line_number,
         init_position,
-        init_neightbors,
+        positions,
         arrayJoin(
             range(init_position, toUInt64(init_position + length(line_number)))
         ) as pos
     FROM
         (
-            SELECT line_no, line_numbers as line_number, init_position, init_neightbors
+            SELECT line_no, line_numbers as line_number, init_position, positions
             FROM
                 (
                     SELECT
@@ -23,12 +23,12 @@ SQL >
                                 line_numbers[i]
                             ),
                             range(1, length(line_numbers) + 1)
-                        ) as init_neightbors,
+                        ) as positions,
                         arrayMap(
                             i -> position(
                                 line,
-                                line_numbers[i]
-                        --        arrayReduce('max', neighbor(init_neightbors, - 1))
+                                line_numbers[i],
+                                if(i > 0 and i < positions[i-1] + length(line_numbers[i-1]), toUInt64(positions[i-1] + length(line_numbers[i-1]) + 1), i)
                             ),
                             range(1, length(line_numbers) + 1)
                         ) as init_position
@@ -37,7 +37,7 @@ SQL >
                 )
                 ARRAY JOIN line_numbers, init_position
         )
-        where line_no = 78
+    
 
 
 
@@ -51,6 +51,7 @@ SQL >
       line_no,
       toInt64(line_number) as line_number,
       init_position,
+      positions,
       pos,
       multiIf(
         --> -1, -1
@@ -78,20 +79,22 @@ SQL >
 NODE remove_duplicates
 SQL >
 
-    SELECT DISTINCT line_no, line_number, init_position
+    SELECT DISTINCT line_no, line_number, init_position, positions
     FROM get_values_that_have_symbols
     WHERE has_symbol > 0
     ORDER BY line_no, init_position
 
 
-NODE result
+
+NODE per_line
+SQL >
+
+    SELECT line_no, sum(line_number) as total FROM remove_duplicates group by line_no
+
+
+
+NODE totals
 SQL >
 
     SELECT sum(line_number) as total FROM remove_duplicates
 
-
-
-NODE check_by_line_no
-SQL >
-
-    SELECT line_no, sum(line_number) as total FROM remove_duplicates group by line_no
